@@ -1,0 +1,255 @@
+{% extends "startup/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_body %}
+    <div id="home_page">
+        <div id="title_page">
+            <br><br><br>
+            <span style="font-size: 10vh">Lets have a little detour</span><br>
+            <span style="font-size: 8vh">to all Restaurants in Cebu</span><br><br>
+            <form class="form-inline" method="GET">
+                <div class="form-group">
+                    {{ filter_form.q|as_crispy_field }}
+                </div>
+                <div class="form-group">
+                    {{ filter_form.restau_type|as_crispy_field }}
+                </div>
+                <button type="submit" class="btn btn-default">Search</button>
+            </form><br>
+            <span style="font-size: 2vh" class="col-md-12">
+                <small>Contains List of Some Restaurants near in Cebu</small>
+            </span>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="col-md-12" id="map_cont">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="update-modal" role="dialog">
+        <form class='modal-update-form' method='POST' action='.' enctype="multipart/form-data" data-url="">
+        {% csrf_token %}
+        <div class="row hidden">
+          <input type="hidden" id="id_data_pk" name="data_pk" value="">
+        </div>
+        <div style="width: 40vw;" id="update-modal-body" class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-5">
+                        <h1 id="restau_name">RESTAURANT'S NAME</h1>
+                        <p id="restau_desc"><small>RESTAURANT'S DESCRIPTION</small></p><hr>
+                        <p id="restau_type"><small>RESTAURANT'S TYPE</small></p><br><hr>
+                        <p id="specialty"><small>RESTAURANT'S SPECIALTY</small></p><br>
+                    </div>
+                    <div id="img_cont" class="col-md-7">
+
+                    </div>
+                </div>
+              </div>
+            </div>
+            <div class="hidden">
+                <!-- This div is created for declaring of variable for current position and target position -->
+                <input val="" name="current_latitude" id="current_latitude">
+                <input val="" name="current_longitude" id="current_longitude">
+                <input val="" name="target_latitude" id="target_latitude">
+                <input val="" name="target_longitude" id="target_longitude">
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-default" id="get_direction">Get Direction</a>
+              <a href="" class="btn btn-primary" id="visit_link">Visit</a>
+              <button type="button" class="btn btn-danger modal-button" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+        </form>
+    </div>
+
+    <div class="modal fade" id="view-modal" role="dialog">
+        <form class='modal-update-form' method='POST' action='.' enctype="multipart/form-data" data-url="">
+        {% csrf_token %}
+        <div class="row hidden">
+          <input type="hidden" id="id_data_pk" name="data_pk" value="">
+        </div>
+        <div style="width: 40vw;" id="update-modal-body" class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-5">
+                        <h1 id="restau_name">RESTAURANT'S NAME</h1>
+                        <p id="restau_desc"><small>RESTAURANT'S DESCRIPTION</small></p><hr>
+                        <p id="restau_type"><small>RESTAURANT'S TYPE</small></p><br><hr>
+                        <p id="specialty"><small>RESTAURANT'S SPECIALTY</small></p><br>
+                    </div>
+                    <div id="img_cont" class="col-md-7">
+
+                    </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger modal-button" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyn4Jxqq8YLw1rjCQknyK9gAvXjTP_OMg&callback=initMap&libraries=&v=weekly"
+      defer
+    ></script>
+    <script>
+      // Note: This example requires that you consent to location sharing when
+      // prompted by your browser. If you see the error "The Geolocation service
+      // failed.", it means you probably did not give permission for the browser to
+      // locate you.
+      let map, infoWindow;
+
+      function initMap() {
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer();
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 10.333332, lng: 123.749997 },
+          zoom: 11,
+        });
+        directionsRenderer.setMap(map);
+
+        // getting of current latitude and longitude of user
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(getPosition)
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+
+        // adding function to button for getting directions
+        document.getElementById("get_direction").addEventListener("click", () => {
+            calculateAndDisplayRoute(directionsService, directionsRenderer);
+        });
+
+        const bounds = {
+            north: 10.533332,
+            south: 10.333332,
+            east: 123.849997,
+            west: 123.749997,
+        };
+        // Define the rectangle and set its editable property to true.
+        rectangle = new google.maps.Rectangle({
+            bounds: bounds,
+        });
+        rectangle.setMap(map);
+        rectangle.addListener("click", showNewRect);
+        infoWindow = new google.maps.InfoWindow();
+
+        {% for item in object_list %}
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(
+                    parseFloat('{{item.latitude}}'),
+                    parseFloat('{{item.longitude}}')
+                ),
+                map,
+                title: "{{item.name}}",
+                extra_data: "{{item.pk}}",
+            });
+            marker_listner(marker)
+        {% endfor %}
+      }
+
+        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+            );
+            infoWindow.open(map);
+        }
+
+        function marker_listner(marker){
+            google.maps.event.addListener(marker, 'click', function () {
+               // do something with this marker ...
+                $.ajax({
+                    type: 'GET',
+                    url: '{% url "map_ajax_click" %}',
+                    data: {
+                        'pk': marker.extra_data
+                    },
+                    success: function(data) {
+                        save_handler(data);
+                    },
+                    error: function(data) {
+                        error_handler();
+                    }
+                });
+
+            });
+        }
+
+        function error_handler(){}
+
+        function save_handler(data){
+            $('#visit_link').attr("href" , "/restaurants/menu-list/" + data['pk'] + "/True/")
+            $('#update-modal').modal('show')
+            $('#update-modal #restau_name').html(data['name'])
+            $('#update-modal #restau_desc').html(data['desc'])
+            $('#update-modal #restau_type').html(data['type'])
+            $('#update-modal #specialty').html(data['specialty'])
+            $('#target_latitude').val(data['latitude'])
+            $('#target_longitude').val(data['longitude'])
+            $("#update-modal #img_cont").css("background-image", "url(" + data['url'] + ")");
+        }
+
+        function calculateAndDisplayRoute(directionsService, directionsRenderer) {
+            $('#update-modal').modal('hide')
+            var start_lat = parseFloat($('#current_latitude').val())
+            var start_long = parseFloat($('#current_longitude').val())
+            var target_lat = parseFloat($('#target_latitude').val())
+            var target_long = parseFloat($('#target_longitude').val())
+            const selectedMode = 'DRIVING';
+            directionsService.route(
+                {
+                    origin: { lat: start_lat, lng: start_long },
+                    destination: { lat: target_lat, lng: target_long },
+                    travelMode: google.maps.TravelMode[selectedMode],
+                },
+                (response, status) => {
+                    if (status == "OK") {
+                        directionsRenderer.setDirections(response);
+                    } else {
+                        window.alert("Directions request failed due to " + status);
+                    }
+                }
+            );
+        }
+
+        function getPosition(position) {
+            $('#current_latitude').val(position.coords.latitude)
+            $('#current_longitude').val(position.coords.longitude)
+        }
+
+        function showNewRect() {
+            const ne = rectangle.getBounds().getNorthEast();
+            restau_string = ''
+            {% for restau in selected_markers %}
+                restau_string = restau_string + '{{restau.name}}<br>'
+            {% endfor %}
+            const contentString =
+            "<b>{{selected_markers.count}} Restaurants is under the rectangle.</b><br>" +
+            restau_string
+            // Set the info window's content and position.
+            infoWindow.setContent(contentString);
+            infoWindow.setPosition(ne);
+            infoWindow.open(map);
+        }
+
+    </script>
+{% endblock %}

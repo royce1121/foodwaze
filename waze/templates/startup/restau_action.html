@@ -1,0 +1,33 @@
+{% extends "startup/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_body %}
+    <div>
+        <br><br>
+        <form method="POST" action="" id="parent_form">
+            <div class="col-md-6 col-md-offset-3" id="action_form">
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class="alert alert-success">
+                            <strong>Success!</strong> {{ message }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <strong>Error!</strong> {{ message }}
+                        </div>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% csrf_token %}
+                <h1>Add Restaurant</h1><br><br>
+                {% crispy form %}
+                <br>
+                <input type="submit" class="btn btn-primary" value="Submit"/>
+                <input type="submit" class="btn btn-primary" name="create_random" value="Create New set of Data"/>
+            </div>
+        </form>
+    </div>
+{% endblock %}

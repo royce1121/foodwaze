@@ -1,0 +1,44 @@
+{% extends "startup/base.html" %}
+{% load crispy_forms_tags %}
+{% load fancy_formsets_tags %}
+
+{% block page_body %}
+    <div>
+        <br><br>
+        <form id="parent_form" method="POST" action="">
+          {% if object %}
+            {% csrf_token %}
+            <div class="col-md-8 col-md-offset-2" id="action_form">
+              {% if messages %}
+              <ul class="messages">
+                  {% for message in messages %}
+                  {% if message.tags == 'success' %}
+                      <div class="alert alert-success">
+                          <strong>Success!</strong> {{ message }}
+                      </div>
+                  {% else %}
+                      <div class="alert alert-danger">
+                          <strong>Error!</strong> {{ message }}
+                      </div>
+                  {% endif %}
+                  {% endfor %}
+              </ul>
+              {% endif %}
+              <h1>{{object.name}}</h1>
+              {% fancy_formsets form_set form_set.helper %}
+              <input type="submit" class="btn btn-primary" value="Submit"/>
+            </div>
+          {% else %}
+            <div class="col-md-4 col-md-offset-4" id="action_form">
+                <center>
+                  <h1>Add Menu<br>select restaurant to be<br>updated</h1><br><br>
+                  {% for item in object_list %}
+                    <a href="{% url 'menu_view' pk=item.pk %}">{{item.name}}</a><br>
+                  {% endfor %}
+                </center>
+                <br>
+            </div>
+          {% endif %}
+        </form>
+    </div>
+{% endblock %}

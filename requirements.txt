@@ -1,2 +1,5 @@
 Django~=2.2.4
 django-model-utils==4.0.0
+django-crispy-forms==1.9.0
+django-braces==1.14.0
+-e git+https://github.com/cjsapaglinawan/django-crispy-forms-fancy-formsets.git@f55f6af5debf3e90d21a0fe7dfcac3f34c72e9b7#egg=django_crispy_forms_fancy_formsets

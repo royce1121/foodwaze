@@ -1,0 +1,64 @@
+{% extends "startup/base.html" %}
+{% load crispy_forms_tags %}
+{% load fancy_formsets_tags %}
+
+{% block page_body %}
+    <div>
+        <br><br>
+        <form id="parent_form" method="POST" action="">
+          <div class="col-md-8 col-md-offset-2" id="action_form">
+            <h1>Statistics</h1><br>
+            <div id="line_top_x"></div>
+          </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block js %}
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['line']});
+      google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Date');
+      {% for item in object_list %}
+        data.addColumn('number', '{{item.name}}');
+      {% endfor %}
+
+      data.addRows([
+
+        {% for item in data_list %}
+        [
+          {% for data in item %}
+            {% if forloop.first %}
+              '{{data}}',
+            {% else %}
+              {{data}},
+            {% endif %}
+          {% endfor %}
+        ],
+        {% endfor %}
+      ]);
+
+      var options = {
+        chart: {
+          title: 'Number of Customer visited the Restaurant per day',
+        },
+        width: 900,
+        height: 500,
+        axes: {
+          x: {
+            0: {side: 'top'}
+          }
+        }
+      };
+
+      var chart = new google.charts.Line(document.getElementById('line_top_x'));
+
+      chart.draw(data, google.charts.Line.convertOptions(options));
+    }
+  </script>
+{% endblock %}
